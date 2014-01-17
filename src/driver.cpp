@@ -10,7 +10,10 @@ using namespace boost;
 
 
 
-IMU::IMU(int rate) : io(), serial(io), timer(io), timeout(posix_time::seconds(0)) {
+IMU::IMU(int rate, models model) : 
+  io(), serial(io), timer(io), timeout(posix_time::seconds(0)) ,
+  model_(model)
+{
 
   sync1 = 0x75;
   sync2 = 0x65;
@@ -20,7 +23,7 @@ IMU::IMU(int rate) : io(), serial(io), timer(io), timeout(posix_time::seconds(0)
   comm_mode = -1;
 
   //cout<<"class created"<<endl;
-
+  //model_ = microstrain_3dm_gx3_45::IMU::GX3_35;
 }
 
 IMU::~IMU() {
@@ -811,9 +814,9 @@ bool IMU::sendNoDataCmd(uint8_t cmd_set, uint8_t cmd) {
 	size_t n = 8;
 
 	waitForMsg();
-	//cout << "do some reading..." << endl;
+	cout << "do some reading..." << endl;
 	recv = read(n);
-	//cout << "we have some data..." << endl;
+	cout << "we have some data..." << endl;
 
 	if (!crcCheck(recv)) return false;
 
@@ -890,13 +893,19 @@ bool IMU::devStatus() {
 	data.push_back(CMD_3DM_DEV_STATUS);
 	//data.push_back(((uint16_t)MODEL_ID>>2) & 0xff);
 	//data.push_back((uint16_t)MODEL_ID & 0xff);
-	data.push_back(0x18);
-	data.push_back(0x54);
+  if (model_ == GX3_45){
+    data.push_back(0x18);
+    data.push_back(0x54);
+  }else if( model_ == GX3_35){
+    data.push_back(0x18);
+    data.push_back(0x51);
+  }
 	data.push_back(0x01); // basic status
 
 
 	crc(data);
 	write(data);
+  cout<<"devStatus waiting"<<endl;
 	waitForMsg();
 
 	tbyte_array recv;
@@ -913,7 +922,8 @@ bool IMU::devStatus() {
 	if (!checkACK(recv,CMD_SET_3DM, CMD_3DM_DEV_STATUS)) return false;
 
 	//if (((uint8_t)recv[10] != ((MODEL_ID>>2)&0xff)) || ((uint8_t)recv[11] != (MODEL_ID & 0xff))) {
-	if (((uint8_t)recv[8] != 0x18) || ((uint8_t)recv[9] != 0x54)) {
+	if ((model_ == GX3_45 && (((uint8_t)recv[8] != 0x18) || ((uint8_t)recv[9] != 0x54))) 
+      ||(model_ == GX3_35 && (((uint8_t)recv[8] != 0x18) || ((uint8_t)recv[9] != 0x51))) ){
 
 		errMsg("Wrong model number.");
 		return false;
@@ -974,8 +984,10 @@ bool IMU::disAllStreams() {
 
 	if (!setStream(0x01,false)) ret = false; // AHRS
 	if (!setStream(0x02,false)) ret = false; // GPS
-	if (!setStream(0x03,false)) ret = false; // NAV
-
+  if (model_ == GX3_45)
+  {
+	  if (!setStream(0x03,false)) ret = false; // NAV
+  }
 	return ret;
 
 }

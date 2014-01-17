@@ -7,8 +7,8 @@
 #include "tf/transform_datatypes.h"
 #include <tf/LinearMath/Matrix3x3.h>
 //#include <gps_common/conversions.h>
-#include <geodesy/utm.h>
-#include <geographic_msgs/GeoPoint.h>
+//#include <geodesy/utm.h>
+//#include <geographic_msgs/GeoPoint.h>
 
 #ifndef NODE_H_
 #define NODE_H_

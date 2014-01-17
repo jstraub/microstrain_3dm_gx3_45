@@ -212,6 +212,11 @@ namespace microstrain_3dm_gx3_45 {
 
 	  };
 
+    enum models {
+      GX3_45 = 0x1854,
+      GX3_35 = 0x1851
+    };
+
 	  enum functions {
 
 		  FUN_USE_NEW = 0x01,
@@ -221,8 +226,10 @@ namespace microstrain_3dm_gx3_45 {
 		  FUN_RESET_TO_FACTORY_DEF = 0x05
 
 	  };
+
+    models model_;
     
-      IMU(int rate);
+      IMU(int rate, models model=microstrain_3dm_gx3_45::IMU::GX3_35);
 
       bool openPort(std::string port, unsigned int baud_rate, boost::asio::serial_port_base::parity opt_parity=
               boost::asio::serial_port_base::parity(
